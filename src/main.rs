@@ -1,22 +1,40 @@
 use clap::Parser;
+use std::fs;
+use std::path::Path;
 
-/// Simple program to greet a person
+/// A simple implementation of the ls command
 #[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    name: String,
+#[command(author, version, about, long_about = None)]
+struct LsCommand {
+    /// Directory to list (default: current directory)
+    #[arg(default_value = ".")]
+    directory: String,
 
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
+    /// Show hidden files
+    #[arg(short, long)]
+    all: bool,
 }
 
 fn main() {
-    let args = Args::parse();
+    let args = LsCommand::parse();
+    let path = Path::new(&args.directory);
 
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name);
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let file_name = entry.file_name();
+                let file_name_str = file_name.to_string_lossy();
+
+                // Skip hidden files unless -a is specified
+                if !args.all && file_name_str.starts_with('.') {
+                    continue;
+                }
+
+                println!("{}", file_name_str);
+            }
+        }
+    } else {
+        eprintln!("Error: Could not read directory '{}'", args.directory);
+        std::process::exit(1);
     }
 }
