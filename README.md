@@ -1,6 +1,6 @@
 # catshell
 
-A simple shell command implementation in Rust, starting with the `ls` and `pwd` commands.
+A simple shell command implementation in Rust, starting with the `ls`, `pwd`, and `rm` commands.
 
 ## 🚀 Features
 
@@ -9,6 +9,9 @@ A simple shell command implementation in Rust, starting with the `ls` and `pwd` 
   - Long format listing (`-l`)
   - Recursive directory listing (`-r` or `--recursive`)
 - **pwd command**: Display the current working directory
+- **rm command**: Remove files or directories
+  - Recursive deletion (`-r` or `--recursive`)
+  - Force deletion (`-f` or `--force`)
 - Written in Rust for performance and reliability
 - Cross-platform compatibility
 

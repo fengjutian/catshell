@@ -4,6 +4,7 @@ use std::path::Path;
 // 导入我们的命令模块
 mod ls;
 mod pwd;
+mod rm;
 
 /// 定义子命令枚举
 #[derive(Subcommand, Debug)]
@@ -13,6 +14,9 @@ enum Commands {
     
     /// Print working directory
     Pwd,
+    
+    /// Remove files or directories
+    Rm(RmCommand),
 }
 
 /// A simple implementation of the ls command
@@ -35,6 +39,22 @@ struct LsCommand {
     recursive: bool,
 }
 
+/// A simple implementation of the rm command
+#[derive(Parser, Debug)]
+struct RmCommand {
+    /// Files or directories to remove
+    #[arg(required = true)]
+    paths: Vec<String>,
+    
+    /// Recursively remove directories and their contents
+    #[arg(short = 'r', long)]
+    recursive: bool,
+    
+    /// Ignore nonexistent files and arguments, never prompt
+    #[arg(short = 'f', long)]
+    force: bool,
+}
+
 /// A simple shell implementation with basic commands
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -54,6 +74,11 @@ fn main() {
         },
         Commands::Pwd => {
             pwd::print_working_directory();
+        },
+        Commands::Rm(rm_args) => {
+            // 将Vec<String>转换为&[&str]用于传递给remove_files函数
+            let paths_ref: Vec<&str> = rm_args.paths.iter().map(String::as_str).collect();
+            rm::remove_files(&paths_ref, rm_args.recursive, rm_args.force);
         },
     }
 }
