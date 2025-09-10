@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 // 定义文件类型枚举
+#[allow(dead_code)]
 pub enum FileType {
     Directory,
     File,
