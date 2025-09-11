@@ -4,6 +4,7 @@ mod ls;
 mod pwd;
 mod rm;
 mod uname;
+mod cd; // 添加cd模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -55,6 +56,12 @@ enum Commands {
         #[arg(short, long)]
         all: bool,
     },
+    
+    /// Change directory
+    Cd {
+        /// Directory to change to
+        path: String,
+    },
 }
 
 fn main() {
@@ -80,9 +87,13 @@ fn main() {
             rm::remove_files(&path_refs, *recursive, *force);
         },
         
-        Commands::Uname { all } => {
+        Commands::Uname { all: _ } => { // 使用_忽略未使用的变量
             // 目前我们只实现了-a选项的功能
             uname::print_system_info();
+        },
+        
+        Commands::Cd { path } => {
+            cd::change_directory(path);
         },
     }
 }

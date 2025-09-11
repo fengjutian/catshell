@@ -1,7 +1,6 @@
 use std::fs;
-use std::os::windows::fs::MetadataExt;
 use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 // 定义文件类型枚举
 #[allow(dead_code)]
