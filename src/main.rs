@@ -6,6 +6,7 @@ mod rm;
 mod uname;
 mod cd; // 添加cd模块
 mod mkdir; // 添加mkdir模块
+mod cat; // 添加cat模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -73,6 +74,20 @@ enum Commands {
         #[arg(short, long)]
         parents: bool,
     },
+    
+    /// Concatenate and display files
+    Cat {
+        /// Files to display
+        paths: Vec<String>,
+        
+        /// Number all output lines
+        #[arg(short = 'n', long)]
+        number_lines: bool,
+        
+        /// Number nonempty output lines
+        #[arg(short = 'b', long)]
+        number_nonblank: bool,
+    },
 }
 
 fn main() {
@@ -110,6 +125,11 @@ fn main() {
         Commands::Mkdir { paths, parents } => {
             let path_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
             mkdir::create_directories(&path_refs, *parents);
+        },
+        
+        Commands::Cat { paths, number_lines, number_nonblank } => {
+            let path_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
+            cat::display_files(&path_refs, *number_lines, *number_nonblank);
         },
     }
 }
