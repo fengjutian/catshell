@@ -1,84 +1,88 @@
 use clap::{Parser, Subcommand};
-use std::path::Path;
 
-// 导入我们的命令模块
 mod ls;
 mod pwd;
 mod rm;
+mod uname;
 
-/// 定义子命令枚举
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// List directory contents
-    Ls(LsCommand),
+    Ls {
+        /// Path to list (default is current directory)
+        path: Option<String>,
+        
+        /// Show hidden files
+        #[arg(short, long)]
+        all: bool,
+        
+        /// Long format listing
+        #[arg(short, long)]
+        long: bool,
+        
+        /// List subdirectories recursively
+        #[arg(short, long)]
+        recursive: bool,
+    },
     
     /// Print working directory
     Pwd,
     
     /// Remove files or directories
-    Rm(RmCommand),
-}
-
-/// A simple implementation of the ls command
-#[derive(Parser, Debug)]
-struct LsCommand {
-    /// Directory to list (default: current directory)
-    #[arg(default_value = ".")]
-    directory: String,
-
-    /// Show hidden files
-    #[arg(short, long)]
-    all: bool,
+    Rm {
+        /// Files or directories to remove
+        paths: Vec<String>,
+        
+        /// Remove directories and their contents recursively
+        #[arg(short, long)]
+        recursive: bool,
+        
+        /// Ignore nonexistent files and arguments, never prompt
+        #[arg(short, long)]
+        force: bool,
+    },
     
-    /// Long format listing
-    #[arg(short = 'l', long)]
-    long: bool,
-    
-    /// Recursive listing
-    #[arg(short, long)]
-    recursive: bool,
-}
-
-/// A simple implementation of the rm command
-#[derive(Parser, Debug)]
-struct RmCommand {
-    /// Files or directories to remove
-    #[arg(required = true)]
-    paths: Vec<String>,
-    
-    /// Recursively remove directories and their contents
-    #[arg(short = 'r', long)]
-    recursive: bool,
-    
-    /// Ignore nonexistent files and arguments, never prompt
-    #[arg(short = 'f', long)]
-    force: bool,
-}
-
-/// A simple shell implementation with basic commands
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct CatShell {
-    #[command(subcommand)]
-    command: Commands,
+    /// Print system information
+    Uname {
+        /// Print all system information
+        #[arg(short, long)]
+        all: bool,
+    },
 }
 
 fn main() {
-    let args = CatShell::parse();
+    let cli = Cli::parse();
     
-    match args.command {
-        Commands::Ls(ls_args) => {
-            let path = Path::new(&ls_args.directory);
-            println!("{}/:", path.display());
-            ls::list_directory(path, ls_args.all, ls_args.long, ls_args.recursive);
+    match &cli.command {
+        Commands::Ls { path, all, long, recursive } => {
+            let path = path.as_deref().unwrap_or(".");
+            ls::list_directory(
+                std::path::Path::new(path), 
+                *all, 
+                *long, 
+                *recursive
+            );
         },
+        
         Commands::Pwd => {
             pwd::print_working_directory();
         },
-        Commands::Rm(rm_args) => {
-            // 将Vec<String>转换为&[&str]用于传递给remove_files函数
-            let paths_ref: Vec<&str> = rm_args.paths.iter().map(String::as_str).collect();
-            rm::remove_files(&paths_ref, rm_args.recursive, rm_args.force);
+        
+        Commands::Rm { paths, recursive, force } => {
+            let path_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
+            rm::remove_files(&path_refs, *recursive, *force);
+        },
+        
+        Commands::Uname { all } => {
+            // 目前我们只实现了-a选项的功能
+            uname::print_system_info();
         },
     }
 }
