@@ -1,8 +1,8 @@
-use std::error::Error;
-use reqwest::blocking::Client;
-use reqwest::{StatusCode, Method};
+use std::process::{Command, Stdio};
+use std::fs::File;
+use std::io::{Write, BufReader, BufRead};
 
-/// 执行HTTP请求并显示响应
+/// 执行HTTP请求并显示响应（使用Windows PowerShell）
 pub fn execute_request(
     url: &str,
     method: &str,
@@ -12,90 +12,130 @@ pub fn execute_request(
     data: Option<&str>,
     output: Option<&str>
 ) {
-    // 创建HTTP客户端
-    let client = Client::new();
+    // 构建PowerShell命令
+    let mut ps_command = String::new();
     
-    // 构建请求
-    let mut request_builder = match method.to_uppercase().as_str() {
-        "GET" => client.get(url),
-        "POST" => client.post(url),
-        "PUT" => client.put(url),
-        "DELETE" => client.delete(url),
-        "HEAD" => client.head(url),
-        _ => {
-            eprintln!("❌ 不支持的HTTP方法: {}", method);
-            return;
-        }
-    };
+    // 设置方法和URL
+    ps_command.push_str(&format!("$response = Invoke-WebRequest -Uri '{}' -Method {}", url, method));
     
     // 添加请求头
-    for (key, value) in headers {
-        request_builder = request_builder.header(*key, *value);
+    if !headers.is_empty() {
+        ps_command.push_str(" -Headers @{");
+        for (key, value) in headers {
+            ps_command.push_str(&format!("'{}'='{}';", key, value));
+        }
+        ps_command.push_str("}");
     }
     
     // 添加请求体
     if let Some(body) = data {
-        request_builder = request_builder.body(body.to_string());
+        // 对数据进行转义，以避免PowerShell解析错误
+        let escaped_body = body.replace("'", "''");
+        ps_command.push_str(&format!(" -Body '{}'", escaped_body));
     }
     
-    // 发送请求
-    match request_builder.send() {
-        Ok(response) => {
-            // 显示状态码
-            if !silent {
-                println!("HTTP/1.1 {} {}", 
-                         response.status().as_u16(), 
-                         response.status().canonical_reason().unwrap_or("Unknown"));
+    // 添加其他选项
+    if !show_headers {
+        ps_command.push_str(" -UseBasicParsing");
+    }
+    
+    // 如果需要显示状态码和头部
+    if show_headers || !silent {
+        ps_command.push_str("\nWrite-Output ('HTTP/1.1 {0} {1}' -f $response.StatusCode, $response.StatusDescription)");
+        
+        if show_headers && !silent {
+            ps_command.push_str("\n$response.Headers | ForEach-Object {\n");
+            ps_command.push_str("    foreach ($key in $_.Keys) {\n");
+            ps_command.push_str("        Write-Output ('{0}: {1}' -f $key, $_.Item($key))\n");
+            ps_command.push_str("    }\n");
+            ps_command.push_str("}\n");
+            ps_command.push_str("Write-Output ''"); // 空行分隔头部和正文
+        }
+    }
+    
+    // 处理响应内容
+    if output.is_some() {
+        // 保存到文件
+        let file_path = output.unwrap();
+        ps_command.push_str(&format!("\n[System.IO.File]::WriteAllBytes('{}', $response.Content)", file_path));
+        if !silent {
+            ps_command.push_str(&format!("\nWrite-Output '✅ 响应已保存到 {}'", file_path));
+        }
+    } else if !silent {
+        // 尝试将内容作为字符串输出（处理文本内容）
+        ps_command.push_str("\ntry {\n");
+        ps_command.push_str("    $content = [System.Text.Encoding]::UTF8.GetString($response.Content)\n");
+        ps_command.push_str("    Write-Output $content\n");
+        ps_command.push_str("} catch {\n");
+        ps_command.push_str("    Write-Output '[二进制内容或无法解码]'\n");
+        ps_command.push_str("}");
+    }
+    
+    // 执行PowerShell命令
+    let output = Command::new("powershell.exe")
+        .arg("-Command")
+        .arg(&ps_command)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output();
+    
+    match output {
+        Ok(result) => {
+            // 打印标准输出
+            if !result.stdout.is_empty() {
+                if let Ok(stdout_str) = String::from_utf8(result.stdout) {
+                    print!("{}", stdout_str);
+                }
             }
             
-            // 显示响应头
-            if show_headers && !silent {
-                for (name, value) in response.headers() {
-                    println!("{}: {:?}", name, value.to_str().unwrap_or("[无法解码]"));
-                }
-                if !silent {
-                    println!(); // 空行分隔头部和正文
-                }
-            }
-            
-            // 获取响应体
-            if let Ok(body) = response.text() {
-                match output {
-                    Some(file_path) => {
-                        // 保存到文件
-                        if let Err(err) = std::fs::write(file_path, &body) {
-                            eprintln!("❌ 无法写入文件 {}: {}", file_path, err);
-                        } else {
-                            if !silent {
-                                println!("✅ 响应已保存到 {}", file_path);
-                            }
-                        }
-                    },
-                    None if !silent => {
-                        // 打印到控制台
-                        print!("{}", body);
-                    },
-                    _ => {}
+            // 打印错误输出
+            if !result.stderr.is_empty() {
+                if let Ok(stderr_str) = String::from_utf8(result.stderr) {
+                    eprintln!("❌ {}", stderr_str.trim());
                 }
             }
         },
         Err(err) => {
-            eprintln!("❌ 请求失败: {}", err);
+            eprintln!("❌ 无法执行PowerShell命令: {}", err);
         }
     }
 }
 
 /// 获取URL的HTTP状态码
 pub fn get_status_code(url: &str) {
-    let client = Client::new();
+    // 使用PowerShell发送HEAD请求
+    let ps_command = format!(
+        "try {{
+            $response = Invoke-WebRequest -Uri '{}' -Method Head -UseBasicParsing
+            Write-Output ('{{0}} - {{1}}' -f $response.StatusCode, $response.StatusDescription)
+        }} catch {{
+            Write-Error ('请求失败: {{0}}' -f $_.Exception.Message)
+        }}",
+        url
+    );
     
-    match client.head(url).send() {
-        Ok(response) => {
-            let status = response.status();
-            println!("{} - {}", status.as_u16(), status.canonical_reason().unwrap_or("Unknown"));
+    let output = Command::new("powershell.exe")
+        .arg("-Command")
+        .arg(&ps_command)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output();
+    
+    match output {
+        Ok(result) => {
+            if !result.stdout.is_empty() {
+                if let Ok(stdout_str) = String::from_utf8(result.stdout) {
+                    println!("{}", stdout_str.trim());
+                }
+            }
+            if !result.stderr.is_empty() {
+                if let Ok(stderr_str) = String::from_utf8(result.stderr) {
+                    eprintln!("❌ {}", stderr_str.trim());
+                }
+            }
         },
         Err(err) => {
-            eprintln!("❌ 请求失败: {}", err);
+            eprintln!("❌ 无法执行PowerShell命令: {}", err);
         }
     }
 }

@@ -96,11 +96,11 @@ enum Commands {
         url: String,
         
         /// HTTP方法 (GET, POST, PUT, DELETE, HEAD等)
-        #[arg(short, long, default_value = "GET")]
+        #[arg(short = 'X', long, default_value = "GET")] // 添加明确的短选项
         request: String,
         
         /// 显示响应头
-        #[arg(short, long)]
+        #[arg(short = 'i', long)] // 添加明确的短选项
         include: bool,
         
         /// 不输出任何内容
@@ -108,11 +108,11 @@ enum Commands {
         silent: bool,
         
         /// 发送的数据
-        #[arg(short, long)]
+        #[arg(short = 'd', long)] // 添加明确的短选项
         data: Option<String>,
         
         /// 保存响应到文件
-        #[arg(short, long)]
+        #[arg(short = 'o', long)] // 添加明确的短选项
         output: Option<String>,
         
         /// 只显示HTTP状态码
@@ -120,7 +120,7 @@ enum Commands {
         head: bool,
         
         /// 添加自定义请求头
-        #[arg(short, long, num_args(1..), value_parser = parse_header)]
+        #[arg(short = 'H', long, num_args(1..), value_parser = parse_header)] // 将短选项改为'H'
         header: Vec<(String, String)>,
     },
 }
