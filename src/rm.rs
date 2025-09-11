@@ -13,7 +13,7 @@ pub fn remove_files(paths: &[&str], recursive: bool, force: bool) {
         
         if !path.exists() {
             if !force {
-                eprintln!("Error: '{}' does not exist", path_str);
+                eprintln!("❌ Error: '{}' does not exist", path_str);
             }
             continue;
         }
@@ -22,11 +22,11 @@ pub fn remove_files(paths: &[&str], recursive: bool, force: bool) {
             // 删除文件
             if let Err(err) = fs::remove_file(path) {
                 if !force {
-                    eprintln!("Error removing file '{}': {}", path_str, err);
+                    eprintln!("❌ Error removing file '{}': {}", path_str, err);
                 }
             } else {
                 if !force {
-                    println!("Removed file '{}'", path_str);
+                    println!("✅ Removed file '{}'", path_str);
                 }
             }
         } else if path.is_dir() {
@@ -34,27 +34,23 @@ pub fn remove_files(paths: &[&str], recursive: bool, force: bool) {
             if recursive {
                 if let Err(err) = fs::remove_dir_all(path) {
                     if !force {
-                        eprintln!("Error removing directory '{}': {}", path_str, err);
+                        eprintln!("❌ Error removing directory '{}': {}", path_str, err);
                     }
                 } else {
                     if !force {
-                        println!("Removed directory '{}' and all its contents", path_str);
+                        println!("✅ Removed directory '{}' and all its contents", path_str);
                     }
                 }
             } else {
                 // 非递归模式下，目录必须为空才能删除
                 if let Err(err) = fs::remove_dir(path) {
-                    eprintln!("Error removing directory '{}': {}", path_str, err);
+                    eprintln!("❌ Error removing directory '{}': {}", path_str, err);
                     eprintln!("Use -r or --recursive to remove non-empty directories");
                 } else {
                     if !force {
-                        println!("Removed directory '{}'", path_str);
+                        println!("✅ Removed directory '{}'", path_str);
                     }
                 }
-            }
-        } else {
-            if !force {
-                eprintln!("Error: '{}' is not a file or directory", path_str);
             }
         }
     }

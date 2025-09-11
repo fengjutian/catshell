@@ -88,6 +88,14 @@ pub fn list_directory(path: &Path, show_hidden: bool, long_format: bool, recursi
         
         // 显示文件信息
         for info in file_infos {
+            // 根据文件类型选择适当的emoji
+            let file_emoji = match info.file_type {
+                FileType::Directory => "📁",
+                FileType::File => "📄",
+                FileType::Symlink => "🔗",
+                FileType::Other => "❓",
+            };
+            
             if long_format {
                 // 长格式显示
                 let size_str = format!("{:10}", info.size);
@@ -104,10 +112,10 @@ pub fn list_directory(path: &Path, show_hidden: bool, long_format: bool, recursi
                 let permissions = format!("{:10}", "rwxrwxrwx");
                 
                 // 修复格式说明符数量，添加一个额外的{}
-                println!("{}{} {} {} {}", type_str, permissions, size_str, time_str, info.name);
+                println!("{}{} {} {} {} {}", file_emoji, type_str, permissions, size_str, time_str, info.name);
             } else {
                 // 简单格式显示
-                println!("{}", info.name);
+                println!("{} {}", file_emoji, info.name);
             }
             
             // 递归显示子目录
@@ -119,6 +127,6 @@ pub fn list_directory(path: &Path, show_hidden: bool, long_format: bool, recursi
             }
         }
     } else {
-        eprintln!("Error: Could not read directory '{}'", path.display());
+        eprintln!("❌ Error: Could not read directory '{}'", path.display());
     }
 }
