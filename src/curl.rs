@@ -1,6 +1,4 @@
 use std::process::{Command, Stdio};
-use std::fs::File;
-use std::io::{Write, BufReader, BufRead};
 
 /// 执行HTTP请求并显示响应（使用Windows PowerShell）
 pub fn execute_request(
