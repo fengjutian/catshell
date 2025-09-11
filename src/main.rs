@@ -5,6 +5,7 @@ mod pwd;
 mod rm;
 mod uname;
 mod cd; // 添加cd模块
+mod mkdir; // 添加mkdir模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -62,6 +63,16 @@ enum Commands {
         /// Directory to change to
         path: String,
     },
+    
+    /// Make directories
+    Mkdir {
+        /// Directories to create
+        paths: Vec<String>,
+        
+        /// Create parent directories as needed
+        #[arg(short, long)]
+        parents: bool,
+    },
 }
 
 fn main() {
@@ -94,6 +105,11 @@ fn main() {
         
         Commands::Cd { path } => {
             cd::change_directory(path);
+        },
+        
+        Commands::Mkdir { paths, parents } => {
+            let path_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
+            mkdir::create_directories(&path_refs, *parents);
         },
     }
 }
