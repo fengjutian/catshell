@@ -7,6 +7,7 @@ mod uname;
 mod cd; // 添加cd模块
 mod mkdir; // 添加mkdir模块
 mod cat; // 添加cat模块
+mod curl; // 添加curl模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -88,6 +89,49 @@ enum Commands {
         #[arg(short = 'b', long)]
         number_nonblank: bool,
     },
+    
+    /// 发起HTTP请求 (curl-like)
+    Curl {
+        /// 请求的URL
+        url: String,
+        
+        /// HTTP方法 (GET, POST, PUT, DELETE, HEAD等)
+        #[arg(short, long, default_value = "GET")]
+        request: String,
+        
+        /// 显示响应头
+        #[arg(short, long)]
+        include: bool,
+        
+        /// 不输出任何内容
+        #[arg(short = 's', long)]
+        silent: bool,
+        
+        /// 发送的数据
+        #[arg(short, long)]
+        data: Option<String>,
+        
+        /// 保存响应到文件
+        #[arg(short, long)]
+        output: Option<String>,
+        
+        /// 只显示HTTP状态码
+        #[arg(long)]
+        head: bool,
+        
+        /// 添加自定义请求头
+        #[arg(short, long, num_args(1..), value_parser = parse_header)]
+        header: Vec<(String, String)>,
+    },
+}
+
+// 解析HTTP头的辅助函数
+fn parse_header(s: &str) -> Result<(String, String), String> {
+    if let Some((key, value)) = s.split_once(":") {
+        Ok((key.trim().to_string(), value.trim().to_string()))
+    } else {
+        Err("格式错误: 请使用 'Key: Value' 格式".to_string())
+    }
 }
 
 fn main() {
@@ -130,6 +174,25 @@ fn main() {
         Commands::Cat { paths, number_lines, number_nonblank } => {
             let path_refs: Vec<&str> = paths.iter().map(String::as_str).collect();
             cat::display_files(&path_refs, *number_lines, *number_nonblank);
+        },
+        Commands::Curl { url, request, include, silent, data, output, head, header } => {
+            // 转换header为&[(&str, &str)]格式
+            let header_refs: Vec<(&str, &str)> = 
+                header.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+                
+            if *head {
+                curl::get_status_code(url);
+            } else {
+                curl::execute_request(
+                    url,
+                    request,
+                    &header_refs,
+                    *include,
+                    *silent,
+                    data.as_deref(),
+                    output.as_deref()
+                );
+            }
         },
     }
 }
