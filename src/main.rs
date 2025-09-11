@@ -8,6 +8,7 @@ mod cd; // 添加cd模块
 mod mkdir; // 添加mkdir模块
 mod cat; // 添加cat模块
 mod curl; // 添加curl模块
+mod cmatrix; // 添加cmatrix模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -123,6 +124,26 @@ enum Commands {
         #[arg(short = 'H', long, num_args(1..), value_parser = parse_header)] // 将短选项改为'H'
         header: Vec<(String, String)>,
     },
+    
+    /// 显示矩阵风格的字符下落动画
+    /// 显示矩阵风格的字符下落动画
+    Cmatrix {
+        /// 设置字符颜色 (green, red, blue, yellow, cyan, magenta, white)
+        #[arg(short, long, default_value = "green")]
+        color: String,
+        
+        /// 设置动画速度 (1-100, 值越小越快)
+        #[arg(short, long, default_value = "10")]
+        speed: u64,
+        
+        /// 设置字符密度 (1-100)
+        #[arg(short = 'd', long, default_value = "30")]
+        density: u8,
+        
+        /// 不使用粗体字符
+        #[arg(long)]
+        no_bold: bool,
+    },
 }
 
 // 解析HTTP头的辅助函数
@@ -193,6 +214,15 @@ fn main() {
                     output.as_deref()
                 );
             }
+        },
+        Commands::Cmatrix { color, speed, density, no_bold } => {
+            // 确保参数在有效范围内
+            // 使用适当的类型转换修复clamp方法调用
+            let adjusted_speed = speed.clamp(&1, &100);
+            let adjusted_density = density.clamp(&1, &100);
+            
+            // 添加解引用操作符*来修复类型不匹配问题
+            cmatrix::run_cmatrix(color, *adjusted_speed, *adjusted_density, *no_bold);
         },
     }
 }
