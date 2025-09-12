@@ -10,6 +10,7 @@ mod cat; // 添加cat模块
 mod curl; // 添加curl模块
 mod cmatrix; // 添加cmatrix模块
 mod vim; // 添加vim模块
+mod open_browser; // 添加open_browser模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -151,6 +152,13 @@ enum Commands {
         /// 要编辑的文件路径（可选）
         file: Option<String>,
     },
+    
+    /// 打开浏览器访问指定URL
+    #[command(name = "open-browser")]
+    OpenBrowser {
+        /// 要访问的URL地址
+        url: String,
+    },
 }
 
 // 解析HTTP头的辅助函数
@@ -233,6 +241,10 @@ fn main() {
         },
         Commands::Vim { file } => {
             vim::run_vim(file.as_deref());
+        },
+        
+        Commands::OpenBrowser { url } => {
+            open_browser::open_browser(url);
         },
     }
 }
