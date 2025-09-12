@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CatShell 终端界面</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .terminal {
+            width: 80%;
+            max-width: 1000px;
+            height: 80vh;
+            background-color: #1e1e1e;
+            border: 2px solid #555;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal-header {
+            background-color: #252526;
+            padding: 10px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            border-radius: 6px 6px 0 0;
+        }
+        .terminal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+        .button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .button-red {
+            background-color: #ff5f56;
+        }
+        .button-yellow {
+            background-color: #ffbd2e;
+        }
+        .button-green {
+            background-color: #27c93f;
+        }
+        .terminal-title {
+            color: #cccccc;
+            font-size: 14px;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .terminal-body {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .terminal-input {
+            display: flex;
+            padding: 10px 15px;
+            border-top: 1px solid #3e3e42;
+        }
+        .prompt {
+            color: #4ec9b0;
+            margin-right: 8px;
+        }
+        #command-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: inherit;
+            flex-grow: 1;
+        }
+        .command-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .output {
+            margin-left: 20px;
+            word-break: break-all;
+        }
+        .output-success {
+            color: #4ec9b0;
+        }
+        .output-error {
+            color: #f48771;
+        }
+        .help-list {
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        .help-item {
+            margin-bottom: 3px;
+        }
+        .command-name {
+            color: #569cd6;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <div class="button button-red"></div>
+                <div class="button button-yellow"></div>
+                <div class="button button-green"></div>
+            </div>
+            <div class="terminal-title">CatShell 终端</div>
+        </div>
+        <div class="terminal-body" id="terminal-output">
+            <div class="output output-success">欢迎使用 CatShell 终端界面！</div>
+            <div class="output">输入命令以执行操作，输入 'help' 获取可用命令列表</div>
+            <div class="output"></div>
+        </div>
+        <div class="terminal-input">
+            <span class="prompt">cat@shell:~$</span>
+            <input type="text" id="command-input" autofocus>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const commandInput = document.getElementById('command-input');
+        const terminalOutput = document.getElementById('terminal-output');
+        
+        // 可用命令列表
+        const availableCommands = [
+            { name: 'ls', description: '列出目录内容' },
+            { name: 'pwd', description: '显示当前工作目录' },
+            { name: 'cd', description: '切换目录' },
+            { name: 'mkdir', description: '创建目录' },
+            { name: 'rm', description: '删除文件或目录' },
+            { name: 'cat', description: '显示文件内容' },
+            { name: 'curl', description: '发起HTTP请求' },
+            { name: 'cmatrix', description: '显示矩阵风格动画' },
+            { name: 'vim', description: '文本编辑器' },
+            { name: 'open-browser', description: '打开浏览器访问URL' },
+            { name: 'open', description: '打开当前目录' },
+            { name: 'uname', description: '显示系统信息' },
+            { name: 'help', description: '显示帮助信息' },
+            { name: 'clear', description: '清除屏幕' }
+        ];
+        
+        // 处理命令输入
+        commandInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const command = commandInput.value.trim();
+                if (command) {
+                    // 显示用户输入的命令
+                    addCommandLine(command);
+                    // 执行命令
+                    executeCommand(command);
+                    // 清空输入框
+                    commandInput.value = '';
+                }
+            }
+        });
+        
+        // 添加命令行到输出区域
+        function addCommandLine(command) {
+            const commandLine = document.createElement('div');
+            commandLine.className = 'command-line';
+            commandLine.innerHTML = `<span class="prompt">cat@shell:~$</span>${command}`;
+            terminalOutput.appendChild(commandLine);
+            // 自动滚动到底部
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        
+        // 添加输出到终端
+        function addOutput(text, isError = false) {
+            const output = document.createElement('div');
+            output.className = isError ? 'output output-error' : 'output';
+            output.textContent = text;
+            terminalOutput.appendChild(output);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        
+        // 执行命令
+        function executeCommand(command) {
+            const parts = command.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+            
+            switch (cmd) {
+                case 'help':
+                    showHelp();
+                    break;
+                case 'clear':
+                    clearTerminal();
+                    break;
+                case 'ls':
+                    addOutput('列出目录内容 (模拟)');
+                    addOutput('file1.txt  file2.txt  directory1  directory2');
+                    break;
+                case 'pwd':
+                    addOutput('当前工作目录: d:\\GitHub\\catshell');
+                    break;
+                case 'cd':
+                    if (args.length > 0) {
+                        addOutput(`已切换到目录: ${args[0]}`);
+                    } else {
+                        addOutput('请指定要切换到的目录', true);
+                    }
+                    break;
+                case 'mkdir':
+                    if (args.length > 0) {
+                        addOutput(`已创建目录: ${args[0]}`);
+                    } else {
+                        addOutput('请指定要创建的目录', true);
+                    }
+                    break;
+                case 'open':
+                    addOutput('正在打开当前目录...');
+                    addOutput('注意: 此功能在Web版本中仅为模拟，实际应用中会打开文件资源管理器');
+                    break;
+                case 'open-browser':
+                    if (args.length > 0) {
+                        addOutput(`正在打开浏览器访问: ${args[0]}`);
+                        addOutput('注意: 此功能在Web版本中仅为模拟，实际应用中会打开浏览器');
+                    } else {
+                        addOutput('请指定要访问的URL', true);
+                    }
+                    break;
+                case 'cmatrix':
+                    addOutput('矩阵动画已启动!');
+                    addOutput('注意: 此功能在Web版本中无法完全模拟，实际应用中会显示字符下落动画');
+                    break;
+                case 'vim':
+                    if (args.length > 0) {
+                        addOutput(`正在打开编辑器编辑文件: ${args[0]}`);
+                        addOutput('注意: 此功能在Web版本中仅为模拟，实际应用中会打开记事本');
+                    } else {
+                        addOutput('正在打开编辑器');
+                        addOutput('注意: 此功能在Web版本中仅为模拟，实际应用中会打开记事本');
+                    }
+                    break;
+                default:
+                    addOutput(`命令未找到: ${cmd}`, true);
+                    addOutput('输入 "help" 获取可用命令列表');
+            }
+        }
+        
+        // 显示帮助信息
+        function showHelp() {
+            addOutput('可用命令列表:');
+            const helpList = document.createElement('div');
+            helpList.className = 'help-list';
+            
+            availableCommands.forEach(cmd => {
+                const helpItem = document.createElement('div');
+                helpItem.className = 'help-item';
+                helpItem.innerHTML = `<span class="command-name">${cmd.name}</span> - ${cmd.description}`;
+                helpList.appendChild(helpItem);
+            });
+            
+            terminalOutput.appendChild(helpList);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        
+        // 清除终端
+        function clearTerminal() {
+            terminalOutput.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
