@@ -12,6 +12,7 @@ mod cmatrix; // 添加cmatrix模块
 mod vim; // 添加vim模块
 mod open_browser; // 添加open_browser模块
 mod open; // 添加open模块
+mod server; // 添加server模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -161,6 +162,15 @@ enum Commands {
         url: String,
     },
     Open,
+    /// 启动HTTP服务器运行HTML文件
+    Server {
+        /// 要提供服务的目录路径（默认是当前目录）
+        path: Option<String>,
+        
+        /// 服务器端口号（默认8000）
+        #[arg(short, long, default_value = "8000")]
+        port: u16,
+    },
 }
 
 // 解析HTTP头的辅助函数
@@ -250,6 +260,9 @@ fn main() {
         },
         Commands::Open => {
             open::open_current_directory();
+        },
+            Commands::Server { path, port } => {
+            server::start_server(path.clone(), *port);
         },
     }
 }
