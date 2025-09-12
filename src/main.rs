@@ -9,6 +9,7 @@ mod mkdir; // 添加mkdir模块
 mod cat; // 添加cat模块
 mod curl; // 添加curl模块
 mod cmatrix; // 添加cmatrix模块
+mod vim; // 添加vim模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -144,6 +145,12 @@ enum Commands {
         #[arg(long)]
         no_bold: bool,
     },
+    
+    /// 简化版vim文本编辑器
+    Vim {
+        /// 要编辑的文件路径（可选）
+        file: Option<String>,
+    },
 }
 
 // 解析HTTP头的辅助函数
@@ -223,6 +230,9 @@ fn main() {
             
             // 添加解引用操作符*来修复类型不匹配问题
             cmatrix::run_cmatrix(color, *adjusted_speed, *adjusted_density, *no_bold);
+        },
+        Commands::Vim { file } => {
+            vim::run_vim(file.as_deref());
         },
     }
 }
