@@ -11,6 +11,7 @@ mod curl; // 添加curl模块
 mod cmatrix; // 添加cmatrix模块
 mod vim; // 添加vim模块
 mod open_browser; // 添加open_browser模块
+mod open; // 添加open模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -159,6 +160,7 @@ enum Commands {
         /// 要访问的URL地址
         url: String,
     },
+    Open,
 }
 
 // 解析HTTP头的辅助函数
@@ -245,6 +247,9 @@ fn main() {
         
         Commands::OpenBrowser { url } => {
             open_browser::open_browser(url);
+        },
+        Commands::Open => {
+            open::open_current_directory();
         },
     }
 }
