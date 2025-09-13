@@ -15,6 +15,17 @@ pub fn ping_host(host: &str, count: u32, timeout: u32, packet_size: u32) {
         .output();
     
     // 这里可以添加其他操作系统的支持
+    // 添加Linux/macOS支持
+#[cfg(not(windows))]
+let output = Command::new("ping")
+    .arg("-c")
+    .arg(count.to_string())
+    .arg("-W")
+    .arg(timeout.to_string())
+    .arg("-s")
+    .arg(packet_size.to_string())
+    .arg(host)
+    .output();
     
     match output {
         Ok(output) => {
