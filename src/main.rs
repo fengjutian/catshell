@@ -14,6 +14,7 @@ mod open_browser; // 添加open_browser模块
 mod open; // 添加open模块
 mod server; // 添加server模块
 mod ping; // 添加ping模块
+mod zip; // 添加zip模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -190,6 +191,24 @@ enum Commands {
         #[arg(short = 's', long, default_value = "32")]
         size: u32,
     },
+    
+    /// 创建或提取zip压缩文件
+    Zip {
+        /// 创建压缩文件
+        #[arg(short, long)]
+        create: bool,
+        
+        /// 提取压缩文件
+        #[arg(short, long)]
+        extract: bool,
+        
+        /// 输出文件或目录路径
+        #[arg(short, long)]
+        output: String,
+        
+        /// 要压缩的文件或目录列表（创建模式）
+        files: Vec<String>,
+    },
 }
 
 // 解析HTTP头的辅助函数
@@ -286,6 +305,22 @@ fn main() {
         
         Commands::Ping { host, count, timeout, size } => {
             ping::ping_host(host, *count, *timeout, *size);
+        },
+        
+        Commands::Zip { create, extract, output, files } => {
+            if *create && *extract {
+                eprintln!("错误: 不能同时使用 --create 和 --extract 选项");
+            } else if *create {
+                zip::create_zip(files, output);
+            } else if *extract {
+                if let Some(zip_file) = files.first() {
+                    zip::extract_zip(zip_file, output);
+                } else {
+                    eprintln!("错误: 解压缩模式需要指定zip文件");
+                }
+            } else {
+                eprintln!("错误: 必须指定 --create 或 --extract 选项");
+            }
         },
     }
 }

@@ -6,14 +6,16 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5.21", features = ["derive"] }
 rand = "0.8.5"
+zip = "0.6.6"  # zip库依赖
 # ctrlc = "3.4.4"  # 用于捕获Ctrl+C信号
 # 移除termion依赖，因为它在Windows上不兼容
 # actix-files = "0.6.5"
 # actix-web = "4.7.0"
 
+# 使用更兼容的方式设置构建选项
 [profile.release]
-rustflags = ["-C", "target-feature=+crt-static"]
 opt-level = "z"  # 优化大小
 lto = true       # 链接时优化
 panic = "abort"   # 不生成panic回溯信息
 strip = true     # 移除调试信息
+# 移除rustflags，因为它需要不稳定的功能
