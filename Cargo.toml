@@ -10,3 +10,10 @@ rand = "0.8.5"
 # 移除termion依赖，因为它在Windows上不兼容
 # actix-files = "0.6.5"
 # actix-web = "4.7.0"
+
+[profile.release]
+rustflags = ["-C", "target-feature=+crt-static"]
+opt-level = "z"  # 优化大小
+lto = true       # 链接时优化
+panic = "abort"   # 不生成panic回溯信息
+strip = true     # 移除调试信息
