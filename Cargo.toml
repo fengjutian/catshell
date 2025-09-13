@@ -6,11 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5.21", features = ["derive"] }
 rand = "0.8.5"
-zip = "0.6.6"  # zip库依赖
-# ctrlc = "3.4.4"  # 用于捕获Ctrl+C信号
-# 移除termion依赖，因为它在Windows上不兼容
-# actix-files = "0.6.5"
-# actix-web = "4.7.0"
+# 移除所有可能导致兼容性问题的依赖
 
 # 使用更兼容的方式设置构建选项
 [profile.release]

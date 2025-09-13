@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 
+// 在mod声明部分添加tui模块
 mod ls;
 mod pwd;
 mod rm;
@@ -15,7 +16,9 @@ mod open; // 添加open模块
 mod server; // 添加server模块
 mod ping; // 添加ping模块
 mod zip; // 添加zip模块
+mod tui; // 添加TUI模块
 
+// 在Commands枚举中添加TUI命令
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
@@ -220,6 +223,7 @@ fn parse_header(s: &str) -> Result<(String, String), String> {
     }
 }
 
+// 在main函数的match语句中添加TUI命令处理
 fn main() {
     let cli = Cli::parse();
     
@@ -322,5 +326,12 @@ fn main() {
                 eprintln!("错误: 必须指定 --create 或 --extract 选项");
             }
         },
+
+        Commands::Tui => {
+            tui::start_tui();
+        }
+
+
     }
+
 }
