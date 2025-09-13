@@ -274,3 +274,5 @@ pub fn start_tui() {
     
     println!("👋 TUI已退出");
 }
+
+// 注意：此实现依赖Windows PowerShell，无需任何外部库
