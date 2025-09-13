@@ -212,6 +212,11 @@ enum Commands {
         /// 要压缩的文件或目录列表（创建模式）
         files: Vec<String>,
     },
+
+    Cd {
+    /// 要切换到的目录
+    path: String,
+},
 }
 
 // 解析HTTP头的辅助函数
@@ -329,7 +334,11 @@ fn main() {
 
         Commands::Tui => {
             tui::start_tui();
-        }
+        },
+
+        Commands::Cd { path } => {
+            cd::change_directory(path);
+        },
 
 
     }
