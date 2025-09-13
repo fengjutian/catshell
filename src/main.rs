@@ -13,6 +13,7 @@ mod vim; // 添加vim模块
 mod open_browser; // 添加open_browser模块
 mod open; // 添加open模块
 mod server; // 添加server模块
+mod ping; // 添加ping模块
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -171,6 +172,24 @@ enum Commands {
         #[arg(short, long, default_value = "8000")]
         port: u16,
     },
+    
+    /// 向指定主机发送ICMP回显请求
+    Ping {
+        /// 要ping的主机名或IP地址
+        host: String,
+        
+        /// 发送的回显请求数量
+        #[arg(short = 'c', long, default_value = "4")]
+        count: u32,
+        
+        /// 超时时间（秒）
+        #[arg(short = 't', long, default_value = "4")]
+        timeout: u32,
+        
+        /// 数据包大小（字节）
+        #[arg(short = 's', long, default_value = "32")]
+        size: u32,
+    },
 }
 
 // 解析HTTP头的辅助函数
@@ -263,6 +282,10 @@ fn main() {
         },
             Commands::Server { path, port } => {
             server::start_server(path.clone(), *port);
+        },
+        
+        Commands::Ping { host, count, timeout, size } => {
+            ping::ping_host(host, *count, *timeout, *size);
         },
     }
 }

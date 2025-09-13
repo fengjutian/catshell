@@ -50,6 +50,13 @@
   - 只显示状态码 (`--head`)
   - 静默模式 (`-s`)
 
+- **server 命令**: 启动HTTP服务器运行HTML文件
+  - 使用纯Rust标准库实现的轻量级HTTP服务器
+  - 支持指定服务目录（默认当前目录）
+  - 支持自定义端口（默认8000）
+  - 自动检测并提供常见文件类型（HTML、CSS、JS、图片等）
+  - 根路径请求自动查找index.html或index.htm
+
 ## 📋 要求
 
 - Rust 1.70+ 和 Cargo
@@ -147,6 +154,18 @@ cargo run -- curl -o output.html https://example.com
 
 # 只获取HTTP状态码
 cargo run -- curl --head https://example.com
+
+# 启动HTTP服务器（使用当前目录和默认端口8000）
+cargo run -- server
+
+# 启动HTTP服务器（指定服务目录）
+cargo run -- server path/to/directory
+
+# 启动HTTP服务器（指定端口）
+cargo run -- server --port 8080
+
+# 启动HTTP服务器（同时指定目录和端口）
+cargo run -- server path/to/directory --port 8080
 ```
 
 ## 🎯 设计理念
@@ -169,3 +188,4 @@ catshell项目旨在学习Rust编程语言和系统编程概念，同时提供�
 ## 💡 鸣谢
 
 这个项目受到了Unix/Linux命令行工具的启发，使用了Rust语言的强大功能来实现。特别感谢Rust社区提供的优秀工具链和库。
+        
